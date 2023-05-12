@@ -3,7 +3,8 @@ const testing = std.testing;
 
 // TODO make this come from the config file. (use your config library tool)
 const debug_program_level = 1;
-pub const ssh_destination = "";
+pub var ssh_destination: ?[]const u8 = null;
+
 pub const get_buffer_string_cmd = "(with-current-buffer (window-buffer (selected-window)) (substring-no-properties (buffer-string)))";
 pub const dismiss_item_cmd = "(org-todo 'done)";
 

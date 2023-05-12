@@ -13,19 +13,10 @@ pub fn build(b: *std.build.Builder) void {
 
     const exe = b.addExecutable("sm", "src/main.zig");
 
-    // simple package
+    // packages
     exe.addPackagePath("emacs", "src/emacs.zig");
+    exe.addPackagePath("config", "src/config.zig");
 
-    //const modules = [_]std.Build.ModuleDependency{
-    //    .{ .name = "clap", .module = clap_module },
-    //    .{ .name = "folders", .module = folders_module },
-    //    .{ .name = "ston", .module = ston_module },
-    //    .{ .name = "ziter", .module = ziter_module },
-
-    //    .{ .name = "core", .module = core_module },
-
-    //    .{ .name = "util", .module = util_module },
-    //};
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.install();
@@ -45,4 +36,13 @@ pub fn build(b: *std.build.Builder) void {
 
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&exe_tests.step);
+
+    // TODO nocheckin
+    const config_exe_tests = b.addTestExe("config", "src/config.zig");
+    config_exe_tests.setTarget(target);
+    config_exe_tests.setBuildMode(mode);
+    config_exe_tests.install();
+
+    const config_test_step = b.step("configtest", "Build, install, and run unit tests for config file");
+    config_test_step.dependOn(&config_exe_tests.step);
 }

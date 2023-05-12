@@ -1,5 +1,6 @@
 const std = @import("std");
 const emacs = @import("emacs");
+const config = @import("config");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
