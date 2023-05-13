@@ -63,7 +63,7 @@ pub fn evalRemoteEmacsExprs(
 
     return execAndGetStdout(
         allocator,
-        &[_][]const u8{ "ssh", ssh_destination, ssh_cmd },
+        &[_][]const u8{ "ssh", ssh_destination.?, ssh_cmd },
     );
 }
 
@@ -74,7 +74,7 @@ pub fn evalRemoteEmacsExpr(
     const ssh_cmd = "emacsclient --eval \"" ++ lisp_expr ++ "\"";
     return execAndGetStdout(
         allocator,
-        &[_][]const u8{ "ssh", ssh_destination, ssh_cmd },
+        &[_][]const u8{ "ssh", ssh_destination.?, ssh_cmd },
     );
 }
 

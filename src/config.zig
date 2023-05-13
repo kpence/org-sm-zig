@@ -10,13 +10,33 @@ const ConfigError = error{
     ReadConfigFiles,
 };
 
+pub const PropertyHashMap = struct {
+    map: std.StringHashMap([]const u8),
+    key_buffer: []u8,
+    allocator: std.mem.Allocator,
+
+    pub fn init(
+        allocator: std.mem.Allocator,
+        key_buffer: []u8,
+    ) PropertyHashMap {
+        return .{
+            .map = std.StringHashMap([]const u8).init(allocator),
+            .key_buffer = key_buffer,
+            .allocator = allocator,
+        };
+    }
+
+    pub fn deinit(self: *PropertyHashMap) void {
+        self.map.deinit();
+        self.allocator.free(self.key_buffer);
+    }
+};
+
 pub fn readAndParseIniConfigFiles(
     allocator: std.mem.Allocator,
     stderr_file: std.fs.File,
     absolute_paths: []const []const u8,
-) ConfigError!std.StringHashMap([]const u8) {
-    const file_bytes = readConfigFiles(allocator, stderr_file, absolute_paths) catch return ConfigError.ReadConfigFiles;
-    defer allocator.free(file_bytes);
+) ConfigError!PropertyHashMap {
     const new_line_char = '\n';
     const comment_char = '#';
     const key_value_delimiter_char = '=';
@@ -33,13 +53,15 @@ pub fn readAndParseIniConfigFiles(
         skip_until_newline,
     };
 
-    var map = std.StringHashMap([]const u8).init(allocator);
+    const file_bytes = readConfigFiles(allocator, stderr_file, absolute_paths) catch return ConfigError.ReadConfigFiles;
+    var prop_map = PropertyHashMap.init(allocator, file_bytes);
 
     var key_start: ?usize = null;
     var key_end: ?usize = null;
     var val_start: ?usize = null;
 
     var stage = ParseStage.ws_before_key;
+
     for (file_bytes) |char, i| switch (stage) {
         .ws_before_key => switch (char) {
             comment_char => stage = .skip_until_newline,
@@ -90,7 +112,7 @@ pub fn readAndParseIniConfigFiles(
                 std.debug.print("nocheckin END {d}\n", .{i});
                 const val_end = i;
 
-                map.put(file_bytes[key_start.?..key_end.?], file_bytes[val_start.?..val_end]) catch |err| {
+                prop_map.map.put(file_bytes[key_start.?..key_end.?], file_bytes[val_start.?..val_end]) catch |err| {
                     std.debug.print("config: Hash map error is {?}\n", .{err});
                     return ConfigError.HashMapError;
                 };
@@ -110,7 +132,7 @@ pub fn readAndParseIniConfigFiles(
         },
         else => {},
     };
-    return map;
+    return prop_map;
 }
 
 pub fn readConfigFiles(
@@ -146,12 +168,12 @@ pub fn readConfigFiles(
 
 test "test config on .smrc" {
     const stderr_file = std.io.getStdErr();
-    var map = try readAndParseIniConfigFiles(testing.allocator, stderr_file, &[_][]const u8{
+    var prop_map = try readAndParseIniConfigFiles(testing.allocator, stderr_file, &[_][]const u8{
         "/home/kpence/.smrc",
     });
-    defer map.deinit();
-    std.debug.print("Number of entries: {any}\n", .{map.count()});
-    const ssh_destination = map.get("ssh_destination");
+    defer prop_map.deinit();
+    std.debug.print("Number of entries: {any}\n", .{prop_map.map.count()});
+    const ssh_destination = prop_map.map.get("ssh_destination");
     try testing.expect(ssh_destination != null);
     std.debug.print("Result of parse: {s}\n", .{ssh_destination.?});
     try testing.expect(std.mem.eql(u8, ssh_destination.?, "foobar"));

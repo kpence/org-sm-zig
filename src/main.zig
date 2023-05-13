@@ -35,6 +35,16 @@ pub fn main() !void {
     else
         .Help;
 
+    const stderr_file = std.io.getStdErr();
+    var prop_map = try config.readAndParseIniConfigFiles(allocator, stderr_file, &[_][]const u8{
+        "/home/kpence/.smrc",
+    });
+    defer prop_map.deinit();
+
+    if (prop_map.map.get("ssh_destination")) |ssh_destination| {
+        emacs.ssh_destination = ssh_destination;
+    }
+
     switch (arg_command) {
         .SendGrade => {
             // Validate the scorse
