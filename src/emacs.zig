@@ -1,8 +1,8 @@
 const std = @import("std");
 const testing = std.testing;
 
-// TODO make this come from the config file. (use your config library tool)
-const debug_program_level = 1;
+// Config properties (These will be overwritten by config)
+pub var debug_logging_level = 1;
 pub var ssh_destination: ?[]const u8 = null;
 
 pub const get_buffer_string_cmd = "(with-current-buffer (window-buffer (selected-window)) (substring-no-properties (buffer-string)))";
@@ -58,7 +58,7 @@ pub fn evalRemoteEmacsExprs(
 
     const ssh_cmd = buf;
 
-    if (debug_program_level >= 2)
+    if (debug_logging_level >= 2)
         std.debug.print("ssh_cmd: {s}\n", .{ssh_cmd});
 
     return execAndGetStdout(
@@ -90,7 +90,7 @@ pub fn execAndGetStdout(
     defer allocator.free(res.stderr);
     defer allocator.free(res.stdout);
 
-    if (debug_program_level >= 1 and res.stderr.len > 0)
+    if (debug_logging_level >= 1 and res.stderr.len > 0)
         std.debug.print("stderr from remote exec: {s}\n", .{res.stderr});
 
     const buf = try allocator.alloc(u8, res.stdout.len);
@@ -117,7 +117,7 @@ fn findFirstOccurence(str: []const u8, needle: []const u8, start_index: usize) !
         }
     }
 
-    if (debug_program_level >= 1)
+    if (debug_logging_level >= 1)
         std.debug.print("findFirstOccurence, needle = `{s}`, str = `{s}`\n", .{ needle, str });
 
     return StringError.SubstringNotFound;
@@ -185,6 +185,10 @@ pub fn getCurrentItemContent(allocator: std.mem.Allocator, show_answer: bool) ![
     defer allocator.free(buf);
     return replaceClozeDeletion(allocator, buf, show_answer);
 }
+
+// TODO make a program that lets you enter into emacs using ssh
+// Somehow make it so you can exit out and back into your shell with a command
+// Somehow make emacs print out that information of how to do that in the window
 
 test "goToCurrentFlashCard" {
     const answer = try getCurrentItemContent(testing.allocator, true);

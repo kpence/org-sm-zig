@@ -41,6 +41,10 @@ pub fn main() !void {
     });
     defer prop_map.deinit();
 
+    if (prop_map.map.get("debug_logging_level")) |debug_logging_level| {
+        emacs.debug_logging_level = debug_logging_level;
+    }
+
     if (prop_map.map.get("ssh_destination")) |ssh_destination| {
         emacs.ssh_destination = ssh_destination;
     }
