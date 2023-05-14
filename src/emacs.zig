@@ -2,7 +2,7 @@ const std = @import("std");
 const testing = std.testing;
 
 // Config properties (These will be overwritten by config)
-pub var debug_logging_level = 1;
+pub var debug_logging_level: u8 = 1;
 pub var ssh_destination: ?[]const u8 = null;
 
 pub const get_buffer_string_cmd = "(with-current-buffer (window-buffer (selected-window)) (substring-no-properties (buffer-string)))";

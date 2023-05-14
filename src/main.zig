@@ -23,6 +23,7 @@ pub fn main() !void {
         Default,
         Dismiss,
         Help,
+        OpenEmacs,
     };
 
     const arg_command: ArgCommandOpt =
@@ -35,14 +36,33 @@ pub fn main() !void {
     else
         .Help;
 
+    // TODO parse flags passed in, one of them will be --debug-init
+    var flags = struct {
+        debug_init: bool,
+    }{
+        .debug_init = true,
+    };
+
     const stderr_file = std.io.getStdErr();
     var prop_map = try config.readAndParseIniConfigFiles(allocator, stderr_file, &[_][]const u8{
         "/home/kpence/.smrc",
+    }, .{
+        .store_config_line_numbers = flags.debug_init,
     });
     defer prop_map.deinit();
 
     if (prop_map.map.get("debug_logging_level")) |debug_logging_level| {
-        emacs.debug_logging_level = debug_logging_level;
+        const value = std.fmt.parseInt(u8, debug_logging_level, 10) catch |err| {
+            const stderr = stderr_file.writer();
+            if (flags.debug_init) {
+                const line_number = prop_map.line_number_map.?.get("debug_logging_level").?;
+                try stderr.print("Fatal error: failed to parse valid number [acceptable range: 0-255] from config property `debug_logging_level`.\n" ++ "The config file being used is: {s}\n" ++ "\n" ++ "At line {d}, `debug_logging_level` is set to: {s}\n", .{ prop_map.config_file_path, line_number, debug_logging_level });
+            } else {
+                try stderr.print("Fatal error: failed to parse valid number [acceptable range: 0-255] from config property `debug_logging_level`.\n" ++ "The config file being used is: {s}." ++ "\n`debug_logging_level` is set to: {s}\n", .{ prop_map.config_file_path, debug_logging_level });
+            }
+            return err;
+        };
+        emacs.debug_logging_level = value;
     }
 
     if (prop_map.map.get("ssh_destination")) |ssh_destination| {
@@ -77,6 +97,11 @@ pub fn main() !void {
         .Dismiss => {
             try emacs.dismissCurrentItem(allocator);
             try stdout.print("Dimissed item\n", .{});
+        },
+        .OpenEmacs => {
+            // TODO
+            std.debug.print("This hasn't been implemented yet!!!!!\n", .{});
+            unreachable;
         },
     }
 
