@@ -44,6 +44,7 @@ pub fn evalRemoteEmacsExprs(
     const buf = try allocator.alloc(u8, total_len);
     defer allocator.free(buf);
 
+    // Concatenate lisp commands into command string
     copy(u8, buf, cmd_start);
     var buf_index: usize = cmd_start.len;
     copy(u8, buf[buf_index..], lisp_exprs[0]);
@@ -78,10 +79,16 @@ pub fn evalRemoteEmacsExpr(
     );
 }
 
+const ExecError = error{
+    FailureExitCodeFromRemoteExec,
+};
+
 pub fn execAndGetStdout(
     allocator: std.mem.Allocator,
     argv: []const []const u8,
 ) ![]u8 {
+    const failure_exit_code = 255;
+
     const res = try std.ChildProcess.exec(.{
         .allocator = allocator,
         .argv = argv,
@@ -89,6 +96,17 @@ pub fn execAndGetStdout(
     });
     defer allocator.free(res.stderr);
     defer allocator.free(res.stdout);
+
+    const exit_code = switch (res.term) {
+        .Exited => |exit_code| brk: {
+            if (debug_logging_level >= 3)
+                std.debug.print("exit code from remote exec: {d}\n", .{exit_code});
+            break :brk exit_code;
+        },
+        else => unreachable,
+    };
+
+    if (exit_code == failure_exit_code) return ExecError.FailureExitCodeFromRemoteExec;
 
     if (debug_logging_level >= 1 and res.stderr.len > 0)
         std.debug.print("stderr from remote exec: {s}\n", .{res.stderr});
@@ -189,6 +207,8 @@ pub fn getCurrentItemContent(allocator: std.mem.Allocator, show_answer: bool) ![
 // TODO make a program that lets you enter into emacs using ssh
 // Somehow make it so you can exit out and back into your shell with a command
 // Somehow make emacs print out that information of how to do that in the window
+
+// TODO make it so if the emacsclient command takes too long, it times out and then will restart emacs
 
 test "goToCurrentFlashCard" {
     const answer = try getCurrentItemContent(testing.allocator, true);

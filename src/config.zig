@@ -90,7 +90,6 @@ pub fn readAndParseIniConfigFiles(
                 key_value_delimiter_char => return ConfigError.InvalidConfigSyntax,
                 ' ', '\t', new_line_char => {},
                 else => {
-                    std.debug.print("nocheckin key start {d}\n", .{i});
                     key_start = i;
                     stage = .key;
                 },
@@ -98,12 +97,10 @@ pub fn readAndParseIniConfigFiles(
             .key => switch (char) {
                 comment_char, new_line_char => return ConfigError.InvalidConfigSyntax,
                 key_value_delimiter_char => {
-                    std.debug.print("nocheckin key end {d}\n", .{i});
                     key_end = i;
                     stage = .ws_before_val;
                 },
                 ' ', '\t' => {
-                    std.debug.print("nocheckin key end {d}\n", .{i});
                     key_end = i;
                     stage = .ws_after_key;
                 },
@@ -112,7 +109,6 @@ pub fn readAndParseIniConfigFiles(
             .ws_after_key => switch (char) {
                 comment_char, new_line_char => return ConfigError.InvalidConfigSyntax,
                 key_value_delimiter_char => {
-                    std.debug.print("nocheckin {d}\n", .{i});
                     key_end = i;
                     stage = .ws_before_val;
                 },
@@ -123,7 +119,6 @@ pub fn readAndParseIniConfigFiles(
                 ' ', '\t' => {},
                 new_line_char, comment_char => return ConfigError.InvalidConfigSyntax,
                 else => {
-                    std.debug.print("nocheckin {d}\n", .{i});
                     val_start = i;
                     stage = .val;
                 },
@@ -131,7 +126,6 @@ pub fn readAndParseIniConfigFiles(
             .val => switch (char) {
                 key_value_delimiter_char => return ConfigError.InvalidConfigSyntax,
                 new_line_char, ' ', '\t', comment_char => {
-                    std.debug.print("nocheckin END {d}\n", .{i});
                     const val_end = i;
 
                     const key = file_bytes[key_start.?..key_end.?];

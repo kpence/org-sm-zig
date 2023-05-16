@@ -56,9 +56,9 @@ pub fn main() !void {
             const stderr = stderr_file.writer();
             if (flags.debug_init) {
                 const line_number = prop_map.line_number_map.?.get("debug_logging_level").?;
-                try stderr.print("Fatal error: failed to parse valid number [acceptable range: 0-255] from config property `debug_logging_level`.\n" ++ "The config file being used is: {s}\n" ++ "\n" ++ "At line {d}, `debug_logging_level` is set to: {s}\n", .{ prop_map.config_file_path, line_number, debug_logging_level });
+                try stderr.print("Fatal error: failed to parse valid number [acceptable range: 0-255] from config property `debug_logging_level`.\n" ++ "The config file being used is: {s}\n" ++ "At line {d}, `debug_logging_level` is set to: {s}\n", .{ prop_map.config_file_path, line_number, debug_logging_level });
             } else {
-                try stderr.print("Fatal error: failed to parse valid number [acceptable range: 0-255] from config property `debug_logging_level`.\n" ++ "The config file being used is: {s}." ++ "\n`debug_logging_level` is set to: {s}\n", .{ prop_map.config_file_path, debug_logging_level });
+                try stderr.print("Fatal error: failed to parse valid number [acceptable range: 0-255] from config property `debug_logging_level`.\n" ++ "The config file being used is: {s}.\n" ++ "`debug_logging_level` is set to: `{s}`\n", .{ prop_map.config_file_path, debug_logging_level });
             }
             return err;
         };
