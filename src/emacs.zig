@@ -106,10 +106,10 @@ pub fn execAndGetStdout(
         else => unreachable,
     };
 
-    if (exit_code == failure_exit_code) return ExecError.FailureExitCodeFromRemoteExec;
-
     if (debug_logging_level >= 1 and res.stderr.len > 0)
         std.debug.print("stderr from remote exec: {s}\n", .{res.stderr});
+
+    if (exit_code == failure_exit_code) return ExecError.FailureExitCodeFromRemoteExec;
 
     const buf = try allocator.alloc(u8, res.stdout.len);
     errdefer allocator.free(buf);
